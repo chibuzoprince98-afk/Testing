@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SociHub Login</title>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f5f5f5;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+
+    .login-box {
+        background: #fff;
+        width: 90%;
+        max-width: 380px;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 0 25px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+        margin-top: 0;
+        text-align: center;
+        color: #333;
+    }
+
+    .input-group {
+        margin-bottom: 18px;
+        width: 100%;
+    }
+
+    input {
+        width: 100%;
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        outline: none;
+        font-size: 15px;
+    }
+
+    #loginBtn {
+        width: 100%;
+        padding: 12px;
+        background: #00cc99;
+        border: none;
+        border-radius: 8px;
+        color: white;
+        font-weight: bold;
+        font-size: 17px;
+        cursor: pointer;
+    }
+
+    #loginBtn:active {
+        transform: scale(0.97);
+    }
+
+    .error {
+        color: red;
+        font-size: 14px;
+        text-align: center;
+        margin-top: 10px;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="login-box">
+    <h2>SociHub Login</h2>
+
+    <div class="input-group">
+        <input type="email" id="email" placeholder="Email">
+    </div>
+
+    <div class="input-group">
+        <input type="password" id="password" placeholder="Password">
+    </div>
+
+    <button id="loginBtn">Login</button>
+
+    <p class="error" id="errorBox"></p>
+</div>
+
+<script type="module">
+
+// ============================
+// ✅ Firebase Setup
+// ============================
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAK4b3ASYB0USFC6cNQiQ9DA3_ROS48RYI",
+  authDomain: "socihub-a2731.firebaseapp.com",
+  projectId: "socihub-a2731",
+  storageBucket: "socihub-a2731.firebasestorage.app",
+  messagingSenderId: "815252223754",
+  appId: "1:815252223754:web:99a26383a59c2557412cf3",
+  measurementId: "G-KXW58D7RGM"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// ============================
+// ✅ Login Logic + Role Redirection
+// ============================
+
+document.getElementById("loginBtn").addEventListener("click", async () => {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+    const errorBox = document.getElementById("errorBox");
+
+    errorBox.textContent = "";
+
+    if (!email || !password) {
+        errorBox.textContent = "Please fill all fields.";
+        return;
+    }
+
+    try {
+        // Login
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // Fetch role from Firestore
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+
+        if (!userDoc.exists()) {
+            errorBox.textContent = "Account record not found.";
+            return;
+        }
+
+        const role = userDoc.data().role;
+
+        // Redirect dashboard by role
+        if (role === "client") {
+            window.location.href = "client_dashboard.html";
+        } 
+        else if (role === "earner") {
+            window.location.href = "earner_dashboard.html";
+        } 
+        else if (role === "admin") {
+            window.location.href = "admin_dashboard.html";
+        } 
+        else {
+            errorBox.textContent = "Invalid role assigned.";
+        }
+
+    } catch (err) {
+        errorBox.textContent = err.message;
+    }
+});
+
+</script>
+
+</body>
+</html>
